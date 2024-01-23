@@ -1,0 +1,126 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
+const axios = require('axios');
+const fastq = require('fastq');
+const BackblazeB2 = require('backblaze-b2');
+const logger = require('./logger');
+
+class ImagineCommand {
+    constructor() {
+        this.b2 = new BackblazeB2({
+            applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
+            applicationKey: process.env.B2_APPLICATION_KEY,
+        });
+        this.queue = fastq.promise(this.imageWorker.bind(this), 5);
+    }
+
+    getCommandData() {
+        return new SlashCommandBuilder()
+            .setName('imagine')
+            .setDescription('Generate an image from a text prompt')
+            .addStringOption(option =>
+                option.setName('prompt')
+                      .setDescription('The text prompt for the image')
+                      .setRequired(true))
+            .toJSON();
+    }
+
+  async execute(interaction) {
+      // Defer the reply, indicating a longer processing time
+      await interaction.deferReply();
+
+      const prompt = interaction.options.getString('prompt');
+      this.queue.push({ interaction, prompt });
+  }
+
+    async createImage(prompt) {
+        const url = process.env.OPENAI_API_URL || 'https://api.openai.com/v1/images/generations';
+        const headers = {
+            'Authorization': `Bearer ${process.env['DALLE3_API_KEY']}`,
+            'Content-Type': 'application/json'
+        };
+
+        const data = {
+            model: "dall-e-3",
+            prompt: prompt,
+            n: 1,
+            size: "1024x1024"
+        };
+
+        try {
+            const response = await axios.post(url, data, { headers: headers });
+            logger.info({ message: 'Image generated successfully', prompt: prompt });
+            return response.data.data[0].url;
+        } catch (error) {
+            logger.error({
+                level: 'error',
+                message: 'Failed to generate image',
+                prompt: prompt,
+                error: error.message
+            });
+            throw error;
+        }
+    }
+
+    async backupToBackblaze(imageUrl, prompt) {
+        let fileName;
+
+        if (!process.env.B2_BUCKET_ID_GENS || !process.env.B2_BUCKET_NAME_GENS) {
+            throw new Error('Backblaze B2 bucket ID or name is not set');
+        }
+
+        try {
+            await this.b2.authorize();
+
+            const imageData = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+            const bucketId = process.env.B2_BUCKET_ID_GENS;
+            const bucketName = process.env.B2_BUCKET_NAME_GENS;
+
+            const uploadUrl = await this.b2.getUploadUrl({ bucketId: bucketId });
+            const sanitizedPrompt = prompt.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+            fileName = `images/${sanitizedPrompt}_${Date.now()}.png`;
+
+            await this.b2.uploadFile({
+                uploadUrl: uploadUrl.data.uploadUrl,
+                uploadAuthToken: uploadUrl.data.authorizationToken,
+                fileName: fileName,
+                data: imageData.data,
+                mime: 'image/png',
+            });
+
+            const backblazeUrl = `https://f005.backblazeb2.com/file/${bucketName}/${fileName}`;
+            logger.info({ message: 'Image backed up to Backblaze', backblazeUrl: backblazeUrl });
+            return backblazeUrl;
+        } catch (error) {
+            logger.error({
+                level: 'error',
+                message: 'Failed to backup image',
+                imageUrl: imageUrl,
+                prompt: prompt,
+                error: error.message
+            });
+            throw error;
+        }
+    }
+
+  async imageWorker(task) {
+      try {
+          const imageUrl = await this.createImage(task.prompt);
+          const backblazeUrl = await this.backupToBackblaze(imageUrl, task.prompt);
+          await task.interaction.editReply({
+              content: `Image: ${imageUrl}\nBackup: ${backblazeUrl}`
+          });
+      } catch (error) {
+          logger.error({
+              level: 'error',
+              message: 'Error in Image Worker',
+              prompt: task.prompt,
+              error: error.message
+          });
+          await task.interaction.editReply({
+              content: 'Error in processing your request: ' + error.message
+          });
+      }
+  }
+}
+
+module.exports = ImagineCommand;

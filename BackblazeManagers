@@ -1,0 +1,77 @@
+const axios = require("axios");
+const logger = require("./logger");
+const BackblazeB2 = require("backblaze-b2");
+
+class BackblazeManager {
+  constructor() {
+    this.b2 = new BackblazeB2({
+      applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
+      applicationKey: process.env.B2_APPLICATION_KEY,
+    });
+  }
+
+  async authorize() {
+    try {
+      logger.info("Starting authorization with Backblaze B2");
+      await this.b2.authorize();
+      logger.info("Authorization successful");
+    } catch (error) {
+      logger.error(`Error during Backblaze B2 authorization: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async uploadImage(imageUrl, prompt) {
+    try {
+      await this.authorize();
+
+      logger.info({ message: "Fetching image data", imageUrl: imageUrl });
+      const imageData = await axios.get(imageUrl, {
+        responseType: "arraybuffer",
+      });
+      logger.info("Image data fetched successfully");
+
+      const bucketId = process.env.B2_BUCKET_ID_GENS;
+      const bucketName = process.env.B2_BUCKET_NAME_GENS;
+      if (!bucketId || !bucketName) {
+        throw new Error("Backblaze B2 bucket ID or name is not set");
+      }
+
+      const uploadUrl = await this.b2.getUploadUrl({ bucketId: bucketId });
+      const sanitizedPrompt = prompt
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "_");
+      const fileName = `images/${sanitizedPrompt}_${Date.now()}.png`;
+
+      logger.info({
+        message: "Starting image upload to Backblaze B2",
+        fileName: fileName,
+      });
+      await this.b2.uploadFile({
+        uploadUrl: uploadUrl.data.uploadUrl,
+        uploadAuthToken: uploadUrl.data.authorizationToken,
+        fileName: fileName,
+        data: imageData.data,
+        mime: "image/png",
+      });
+
+      const backblazeUrl = `https://f005.backblazeb2.com/file/${bucketName}/${fileName}`;
+      logger.info(`Backup successful for ${fileName}`);
+      return backblazeUrl;
+    } catch (error) {
+      logger.error({
+        message: "Error during backup to Backblaze",
+        imageUrl: imageUrl,
+        prompt: prompt,
+        errorDetails: {
+          error: error.message,
+          stack: error.stack,
+          response: error.response ? error.response.data : null,
+        },
+      });
+      throw error;
+    }
+  }
+}
+
+module.exports = BackblazeManager;

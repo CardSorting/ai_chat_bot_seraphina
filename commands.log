@@ -1,0 +1,28 @@
+{"level":30,"time":1702700870044,"pid":449,"hostname":"251427c182a9","msg":"Initializing AskSlashCommand."}
+{"level":30,"time":1702700870045,"pid":449,"hostname":"251427c182a9","msg":"Constructing SlashCommandBuilder for /ask command."}
+{"level":30,"time":1702700870055,"pid":449,"hostname":"251427c182a9","msg":"AskSlashCommand initialization complete."}
+{"level":30,"time":1702700996141,"pid":840,"hostname":"251427c182a9","msg":"Initializing AskSlashCommand."}
+{"level":30,"time":1702700996141,"pid":840,"hostname":"251427c182a9","msg":"Constructing SlashCommandBuilder for /ask command."}
+{"level":30,"time":1702700996145,"pid":840,"hostname":"251427c182a9","msg":"AskSlashCommand initialization complete."}
+{"level":30,"time":1702701011755,"pid":840,"hostname":"251427c182a9","msg":"Executing /ask command."}
+{"level":30,"time":1702701011756,"pid":840,"hostname":"251427c182a9","msg":"Received query from user 530285329047879681 in channel 1185271051966480446: what do you think of art"}
+{"level":20,"time":1702701020718,"pid":840,"hostname":"251427c182a9","msg":"Received completion from OpenAI."}
+{"level":30,"time":1702701020718,"pid":840,"hostname":"251427c182a9","msg":"Preparing to respond to user 530285329047879681 in channel 1185271051966480446."}
+{"level":20,"time":1702701020718,"pid":840,"hostname":"251427c182a9","msg":"Creating embed for response."}
+{"level":50,"time":1702701020720,"pid":840,"hostname":"251427c182a9","msg":"Error responding to user 530285329047879681 in channel 1185271051966480446: Error: Received one or more errors\n    at _UnionValidator.handle (/home/runner/SurefootedBeautifulHardware/node_modules/@sapphire/shapeshift/dist/cjs/index.cjs:1125:23)\n    at _UnionValidator.parse (/home/runner/SurefootedBeautifulHardware/node_modules/@sapphire/shapeshift/dist/cjs/index.cjs:216:88)\n    at EmbedBuilder.setColor (/home/runner/SurefootedBeautifulHardware/node_modules/@discordjs/builders/dist/index.js:304:20)\n    at AskSlashCommand.respondToUser (/home/runner/SurefootedBeautifulHardware/AskSlashCommand.js:101:18)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async AskSlashCommand.execute (/home/runner/SurefootedBeautifulHardware/AskSlashCommand.js:72:13)\n    at async handleInteraction (/home/runner/SurefootedBeautifulHardware/commandHandler.js:30:5)"}
+{"level":50,"time":1702701020720,"pid":840,"hostname":"251427c182a9","msg":"Error during execution of /ask command for user 530285329047879681: Error: Received one or more errors\n    at _UnionValidator.handle (/home/runner/SurefootedBeautifulHardware/node_modules/@sapphire/shapeshift/dist/cjs/index.cjs:1125:23)\n    at _UnionValidator.parse (/home/runner/SurefootedBeautifulHardware/node_modules/@sapphire/shapeshift/dist/cjs/index.cjs:216:88)\n    at EmbedBuilder.setColor (/home/runner/SurefootedBeautifulHardware/node_modules/@discordjs/builders/dist/index.js:304:20)\n    at AskSlashCommand.respondToUser (/home/runner/SurefootedBeautifulHardware/AskSlashCommand.js:101:18)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async AskSlashCommand.execute (/home/runner/SurefootedBeautifulHardware/AskSlashCommand.js:72:13)\n    at async handleInteraction (/home/runner/SurefootedBeautifulHardware/commandHandler.js:30:5)"}
+{"level":30,"time":1702701158156,"pid":1314,"hostname":"251427c182a9","msg":"Initializing AskSlashCommand."}
+{"level":30,"time":1702701158157,"pid":1314,"hostname":"251427c182a9","msg":"Constructing SlashCommandBuilder for /ask command."}
+{"level":30,"time":1702701158162,"pid":1314,"hostname":"251427c182a9","msg":"AskSlashCommand initialization complete."}
+{"level":30,"time":1702701276094,"pid":1695,"hostname":"251427c182a9","msg":"Initializing AskSlashCommand."}
+{"level":30,"time":1702701276094,"pid":1695,"hostname":"251427c182a9","msg":"Constructing SlashCommandBuilder for /ask command."}
+{"level":30,"time":1702701276099,"pid":1695,"hostname":"251427c182a9","msg":"AskSlashCommand initialization complete."}
+{"level":30,"time":1702701430121,"pid":1695,"hostname":"251427c182a9","msg":"Executing /ask command."}
+{"level":30,"time":1702701430122,"pid":1695,"hostname":"251427c182a9","msg":"Received query from user 530285329047879681 in channel 1185271051966480446: what is your favorite kind of music"}
+{"level":20,"time":1702701435277,"pid":1695,"hostname":"251427c182a9","msg":"Received completion from OpenAI."}
+{"level":30,"time":1702701435277,"pid":1695,"hostname":"251427c182a9","msg":"Preparing to respond to user 530285329047879681 in channel 1185271051966480446."}
+{"level":20,"time":1702701435278,"pid":1695,"hostname":"251427c182a9","msg":"Creating embed for response."}
+{"level":30,"time":1702701435474,"pid":1695,"hostname":"251427c182a9","msg":"Appending chat log entry."}
+{"level":30,"time":1702701435474,"pid":1695,"hostname":"251427c182a9","msg":"Successfully responded to user 530285329047879681 with response message."}
+{"level":30,"time":1702701435474,"pid":1695,"hostname":"251427c182a9","msg":"Response from OpenAI processed for user 530285329047879681."}
+{"level":30,"time":1702701435475,"pid":1695,"hostname":"251427c182a9","msg":"Chat log entry appended successfully."}

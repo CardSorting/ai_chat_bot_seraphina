@@ -1,0 +1,107 @@
+const { OpenAI } = require('openai');
+const fastq = require('fastq');
+const logger = require('./logger');
+const { EmbedBuilder } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
+
+class DiscordOpenAIBot {
+  constructor(client, openAIToken, userLastChannelMapCache) {
+    this.client = client;
+    this.openAI = new OpenAI({
+        baseURL: "https://api.endpoints.anyscale.com/v1",
+        apiKey: openAIToken
+    });
+    this.chatLogFilePath = path.join(__dirname, 'chatlog.json');
+    this.queue = fastq(this.processTask.bind(this), 1);
+    this.userLastChannelMapCache = userLastChannelMapCache;
+  }
+
+  enqueue(userId, query) {
+    return new Promise((resolve, reject) => {
+      if (typeof query !== "string" || typeof userId !== "string") {
+        reject(new Error("User ID and query must both be strings."));
+        return;
+      }
+
+      const userChannelData = this.userLastChannelMapCache.get(userId);
+      if (!userChannelData || !userChannelData.channelId) {
+        reject(new Error("Channel ID must be retrieved from UserLastChannelMapCache for the provided User ID."));
+        return;
+      }
+
+      const channelId = userChannelData.channelId;
+
+      this.queue.push({ userId, query, channelId }, (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+  }
+
+  async processTask(task, done) {
+    try {
+      const { userId, query, channelId } = task;
+      const completion = await this.openAI.chat.completions.create({
+        model: "meta-llama/Llama-2-70b-chat-hf",
+        messages: [
+          { "role": "system", "content": "You are a helpful assistant." },
+          { "role": "user", "content": query }
+        ],
+        temperature: 0.7
+      });
+      const responseText = completion.choices
+        .map(choice => choice.message.content.trim())
+        .join(' ');
+      await this.respondToUser(userId, query, responseText, channelId);
+      done(null, { success: true, response: responseText });
+    } catch (error) {
+      logger.error(`Error processing task: ${error.message}`);
+      done(error, null);
+    }
+  }
+
+  async respondToUser(userId, originalQuery, responseMessage, channelId) {
+    try {
+      const channel = await this.client.channels.fetch(channelId);
+      const user = await this.client.users.fetch(userId);
+      const embed = this.createResponseEmbed(originalQuery, responseMessage, user);
+
+      await channel.send({ embeds: [embed] });
+      this.appendToChatLog(originalQuery, responseMessage);
+    } catch (error) {
+      logger.error('Error in respondToUser', {
+        userId,
+        query,
+        responseMessage,
+        channelId,
+        error: { message: error.message, stack: error.stack }
+      });
+    }
+  }
+
+  createResponseEmbed(query, responseMessage, user) {
+    return new EmbedBuilder()
+      .setColor('#0099ff')
+      .setTitle('Response')
+      .setFooter({ text: `Requested by ${user.tag}`, iconURL: user.displayAvatarURL() })
+      .setTimestamp()
+      .addFields(
+        { name: 'Your Query', value: query || 'No query provided' },
+        { name: 'Response', value: responseMessage.trim() || 'No response provided' }
+      );
+  }
+
+  appendToChatLog(prompt, response) {
+    const logEntry = { prompt, response, timestamp: new Date().toISOString() };
+    fs.appendFile(this.chatLogFilePath, JSON.stringify(logEntry) + '\n', (err) => {
+      if (err) {
+        logger.error('Error appending to the chat log', { err });
+      } else {
+        logger.info('Chat log entry added');
+      }
+    });
+  }
+}
+
+module.exports = DiscordOpenAIBot;

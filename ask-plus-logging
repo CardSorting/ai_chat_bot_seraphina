@@ -1,0 +1,204 @@
+const { SlashCommandBuilder, EmbedBuilder } = require("@discordjs/builders");
+const { OpenAI } = require("openai");
+const logger = require("./commandlog");
+const fs = require("fs");
+const path = require("path");
+
+class AskSlashCommand {
+  constructor(client, openAIToken, userLastChannelMapCache) {
+    logger.info("Initializing AskSlashCommand.");
+    this.data = this._buildCommandData();
+    this.client = client;
+    this.openAI = new OpenAI({
+      apiKey: openAIToken,
+      baseURL: "https://api.endpoints.anyscale.com/v1",
+    });
+    this.userLastChannelMapCache = userLastChannelMapCache;
+    this.chatLogFilePath = path.join(__dirname, "chatlog.json");
+    logger.info("AskSlashCommand initialization complete.");
+  }
+
+  _buildCommandData() {
+    logger.info("Constructing SlashCommandBuilder for /ask command.");
+    return new SlashCommandBuilder()
+      .setName("ask")
+      .setDescription("Submit a query for the bot to process")
+      .addStringOption((option) =>
+        option
+          .setName("query")
+          .setDescription("The query text")
+          .setRequired(true),
+      );
+  }
+
+  async execute(interaction) {
+    logger.info("Executing /ask command.");
+    const userId = interaction.user.id;
+    const originalQuery = interaction.options.getString("query");
+    const channelId = interaction.channelId;
+
+    if (!userId || !channelId || !originalQuery) {
+      const errMsg = "Invalid input parameters for /ask command execution.";
+      logger.error(errMsg, { userId, channelId, originalQuery });
+      interaction.reply({ content: errMsg, ephemeral: true });
+      return;
+    }
+
+    try {
+      logger.info(
+        `Received query from user ${userId} in channel ${channelId}: ${originalQuery}`,
+      );
+      await interaction.deferReply({ ephemeral: true });
+      this.userLastChannelMapCache.set(
+        userId,
+        channelId,
+        "discord",
+        originalQuery,
+      );
+
+      const completion = await this.openAI.chat.completions.create({
+        model: "meta-llama/Llama-2-70b-chat-hf",
+        messages: [
+          { role: "system", content: "You are a helpful assistant." },
+          { role: "user", content: originalQuery },
+        ],
+        temperature: 0.7,
+      });
+
+      logger.debug("Received completion from OpenAI.", { completion });
+
+      if (!completion.choices || completion.choices.length === 0) {
+        logger.error("OpenAI returned an empty response.", {
+          userId,
+          channelId,
+          originalQuery,
+        });
+        throw new Error("OpenAI returned an empty response.");
+      }
+
+      const firstChoice = completion.choices[0];
+      if (!firstChoice.message || !firstChoice.message.content) {
+        logger.error("OpenAI response is missing message content.", {
+          userId,
+          channelId,
+          originalQuery,
+        });
+        throw new Error("OpenAI response is missing message content.");
+      }
+
+      const responseMessage = firstChoice.message.content.trim();
+      await this.respondToUser(
+        userId,
+        originalQuery,
+        responseMessage,
+        channelId,
+      );
+      logger.info(`Response from OpenAI processed for user ${userId}.`);
+    } catch (error) {
+      logger.error(
+        `Error during execution of /ask command for user ${userId}: ${error.stack}`,
+        { userId, channelId, originalQuery, error },
+      );
+      await interaction.editReply({ content: `Error: ${error.message}` });
+    }
+  }
+
+  async respondToUser(userId, originalQuery, responseMessage, channelId) {
+    logger.info(
+      `Preparing to respond to user ${userId} in channel ${channelId}.`,
+    );
+    try {
+      if (!channelId || !userId) {
+        logger.error("Missing channel or user ID for response.", {
+          userId,
+          channelId,
+        });
+        throw new Error("Missing channel or user ID for response.");
+      }
+
+      const channel = await this.client.channels
+        .fetch(channelId)
+        .catch((err) => {
+          logger.error(`Failed to fetch channel: ${err.stack}`, {
+            channelId,
+            error: err,
+          });
+          throw err;
+        });
+      const user = await this.client.users.fetch(userId).catch((err) => {
+        logger.error(`Failed to fetch user: ${err.stack}`, {
+          userId,
+          error: err,
+        });
+        throw err;
+      });
+
+      logger.debug("Creating embed for response.", {
+        userId,
+        channelId,
+        originalQuery,
+        responseMessage,
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor(0x0099ff) // Use the hexadecimal integer representation of the color
+        .setTitle("Response")
+        .addFields(
+          { name: "Your Query", value: originalQuery },
+          {
+            name: "Response",
+            value: responseMessage || "No response provided",
+          },
+        )
+        .setFooter({
+          text: `Requested by ${user.tag}`,
+          iconURL: user.displayAvatarURL(),
+        })
+        .setTimestamp();
+
+      await channel.send({ embeds: [embed] });
+      this.appendToChatLog(originalQuery, responseMessage);
+      logger.info(
+        `Successfully responded to user ${userId} with response message.`,
+      );
+    } catch (error) {
+      logger.error(
+        `Error responding to user ${userId} in channel ${channelId}: ${error.stack}`,
+        {
+          userId,
+          channelId,
+          originalQuery,
+          responseMessage,
+          error,
+        },
+      );
+      throw error; // This rethrows the error to be handled by the execute method.
+    }
+  }
+
+  appendToChatLog(originalQuery, response) {
+    logger.info("Appending chat log entry.", { originalQuery, response });
+
+    const logEntry = {
+      originalQuery,
+      response,
+      timestamp: new Date().toISOString(),
+    };
+    fs.appendFile(
+      this.chatLogFilePath,
+      JSON.stringify(logEntry) + "\n",
+      (err) => {
+        if (err) {
+          logger.error("Failed to append to chat log.", {
+            error: err,
+            logEntry,
+          });
+        } else {
+          logger.info("Chat log entry appended successfully.");
+        }
+      },
+    );
+  }
+}
+
+module.exports = AskSlashCommand;

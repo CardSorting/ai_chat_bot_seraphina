@@ -1,0 +1,21 @@
+{"level":30,"time":1703107898696,"pid":2123,"hostname":"9e265b4c9343","message":"Image generated successfully","prompt":"a mound of jelly donuts"}
+{"level":50,"time":1703107898697,"pid":2123,"hostname":"9e265b4c9343","level":"error","message":"Failed to backup image","imageUrl":"https://oaidalleapiprodscus.blob.core.windows.net/private/org-WBoAfzDO4Sgz7PjynYeuhNfA/user-3jgBxgWh59mfN7EGD10RjQ7l/img-B4c5aIj390N0vHIvvtJPxIJu.png?st=2023-12-20T20%3A31%3A38Z&se=2023-12-20T22%3A31%3A38Z&sp=r&sv=2021-08-06&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2023-12-20T01%3A09%3A44Z&ske=2023-12-21T01%3A09%3A44Z&sks=b&skv=2021-08-06&sig=F7e/aZ7IFe0rJjwhaSnUYF1ZjAy7LPPNdlJyCaWobmg%3D","prompt":"a mound of jelly donuts","error":"Invalid accountId or applicationKeyId"}
+{"level":50,"time":1703107898697,"pid":2123,"hostname":"9e265b4c9343","level":"error","message":"Error in Image Worker","prompt":"a mound of jelly donuts","error":"Invalid accountId or applicationKeyId"}
+{"level":30,"time":1703107911857,"pid":2123,"hostname":"9e265b4c9343","msg":"Cache set for user 530285329047879681."}
+{"level":30,"time":1703406786935,"pid":15,"hostname":"01088c7920b1","msg":"Cache set for user 785696155224899617."}
+{"level":30,"time":1703406934204,"pid":15,"hostname":"01088c7920b1","msg":"Cache set for user 785696155224899617."}
+{"level":30,"time":1703406976939,"pid":15,"hostname":"01088c7920b1","msg":"Cache set for user 785696155224899617."}
+{"level":30,"time":1703411407283,"pid":15,"hostname":"01088c7920b1","msg":"Cache for user 785696155224899617 invalidated."}
+{"level":30,"time":1703668499192,"pid":16,"hostname":"d3b89094fb05","msg":"Cache set for user 530285329047879681."}
+{"level":30,"time":1703668553675,"pid":245,"hostname":"d3b89094fb05","msg":"Cache set for user 530285329047879681."}
+{"level":30,"time":1703668645241,"pid":498,"hostname":"d3b89094fb05","msg":"Cache set for user 530285329047879681."}
+{"level":30,"time":1703669074357,"pid":498,"hostname":"d3b89094fb05","msg":"Cache set for user 1088145039022112839."}
+{"level":30,"time":1703669124177,"pid":498,"hostname":"d3b89094fb05","msg":"Adding 500 credits to user id: 1088145039022112839"}
+{"level":30,"time":1703669124938,"pid":498,"hostname":"d3b89094fb05","msg":"Added credits to user id: 1088145039022112839"}
+{"level":30,"time":1703669127681,"pid":498,"hostname":"d3b89094fb05","msg":"Cache set for user 1088145039022112839."}
+{"level":30,"time":1703674030352,"pid":498,"hostname":"d3b89094fb05","msg":"Cache for user 530285329047879681 invalidated."}
+{"level":30,"time":1703674030352,"pid":498,"hostname":"d3b89094fb05","msg":"Cache for user 1088145039022112839 invalidated."}
+{"level":50,"time":1704391105110,"pid":6105,"hostname":"d1ff11bab6b0","msg":"Error initializing Backblaze B2: Request failed with status code 401"}
+{"level":50,"time":1704391447299,"pid":7113,"hostname":"d1ff11bab6b0","msg":"Error initializing Backblaze B2: Request failed with status code 401"}
+{"level":50,"time":1704391500660,"pid":7316,"hostname":"d1ff11bab6b0","msg":"Error initializing Backblaze B2: Request failed with status code 401"}
+{"level":50,"time":1704391839925,"pid":8374,"hostname":"d1ff11bab6b0","msg":"Error initializing Backblaze B2: Request failed with status code 401"}
